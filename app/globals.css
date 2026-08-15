@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-navy-900: #0f172a;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: #1d4ed8;
+  color: #ffffff;
+}
+
+/* ===== 移动端适配 ===== */
+html,
+body {
+  overflow-x: hidden;
+}
+/* 触控目标最小高度，避免手机误触 */
+button,
+a {
+  touch-action: manipulation;
+}
+/* 手机上正文稍大、行距更舒适 */
+@media (max-width: 640px) {
+  body {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  main section,
+  main div {
+    word-break: break-word;
+  }
+  /* 详情页字段：手机上 label 与值堆叠，避免超长地址撑破屏幕 */
+  .field-row {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .field-row dt {
+    width: 100%;
+  }
+}
+
+/* 数字使用等宽字体，方便比对 CRN / VAT */
+.font-mono,
+code,
+[data-mono] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 卡片统一轻盈悬浮效果 */
+.card-hover {
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.card-hover:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 10px 25px -8px rgb(37 99 235 / 0.18);
+  transform: translateY(-1px);
+}
+
+/* AdSense 全局样式 */
+.adsbygoogle {
+  background: transparent;
+}
+
+/* ===== 打印样式：一键导出 PDF 验证报告 ===== */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print-hidden,
+  .no-print,
+  header,
+  footer,
+  nav,
+  button,
+  form,
+  [class*="ad-slot"],
+  [class*="adsbygoogle"] {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .print-block {
+    display: block !important;
+  }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  .print-report-header {
+    display: block !important;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0f172a;
+  }
+}
+
+/* 打印水印（免费计划 PDF 报告） */
+.pdf-watermark {
+  display: none;
+}
+@media print {
+  .pdf-watermark {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    color: rgba(15, 23, 42, 0.16);
+    font-size: 13px;
+    line-height: 2.4;
+    padding: 40mm 12mm;
+    transform: rotate(-12deg);
+    text-align: center;
+  }
+}
+
+/* 默认隐藏打印专用头部，屏幕浏览不需要 */
+.print-report-header {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
