@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 独立工具脚本目录（Node CLI，非 Next.js 应用代码）
+    "deploy/**",
+    "scripts/**",
+    "*.tsbuildinfo",
   ]),
 ]);
 

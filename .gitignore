@@ -40,6 +40,11 @@ yarn-error.log*
 !/deploy/.env.example
 /deploy/*.log
 
+# CH 数据管道运行时产物（SQLite 数据库与生成的 fixture）
+/data
+/scripts/ch-sync/mock/sample-snapshot.csv
+/scripts/ch-sync/mock/sample-events.ndjson
+
 # vercel
 .vercel
 

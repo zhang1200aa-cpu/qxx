@@ -6,13 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test",
+    "ch:fixtures": "node scripts/ch-sync/mock/make-fixtures.mjs",
+    "ch:snapshot": "node scripts/ch-sync/snapshot.js",
+    "ch:stream": "node scripts/ch-sync/streaming.js",
+    "ms:settings": "node scripts/search/index-settings.mjs",
+    "ms:sync": "node scripts/search/sync.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.6",
     "ioredis": "^5.4.1",
     "lucide-react": "^0.453.0",
     "next": "16.3.1",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -25,5 +32,8 @@
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.5"
   }
 }

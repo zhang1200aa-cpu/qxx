@@ -30,7 +30,6 @@ export const CACHE_TTL = {
 
 class MemoryCache implements Cache {
   private store = new Map<string, { value: unknown; expiresAt: number }>();
-  private counters = new Map<string, number>();
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.store.get(key);
@@ -59,15 +58,16 @@ class MemoryCache implements Cache {
   }
 
   async incr(key: string, ttlSeconds = 300): Promise<number> {
+    // 与 Redis 语义一致：计数写进同一份 store，窗口过期后重置。
+    // 这样 rateLimitUsed() 可以直接用 get 读取限流计数。
     const now = Date.now();
-    const current = this.counters.get(key);
-    if (current === undefined) {
-      this.counters.set(key, 1);
-      setTimeout(() => this.counters.delete(key), ttlSeconds * 1000);
+    const entry = this.store.get(key);
+    if (!entry || entry.expiresAt < now) {
+      this.store.set(key, { value: 1, expiresAt: now + ttlSeconds * 1000 });
       return 1;
     }
-    const next = current + 1;
-    this.counters.set(key, next);
+    const next = (entry.value as number) + 1;
+    entry.value = next;
     return next;
   }
 }

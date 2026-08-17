@@ -115,14 +115,20 @@ export default async function RootLayout({
   );
 
   // Clerk 启用时全局包裹（提供 SignIn/SignUp 云端组件与会话上下文）
+  const fontClass = `${geistSans.variable} ${geistMono.variable}`;
+
   if (clerkEnabled) {
     return (
-      <html lang={htmlLang}>
+      <html lang={htmlLang} className={fontClass}>
         <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
           {body}
         </ClerkProvider>
       </html>
     );
   }
-  return <html lang={htmlLang}>{body}</html>;
+  return (
+    <html lang={htmlLang} className={fontClass}>
+      {body}
+    </html>
+  );
 }

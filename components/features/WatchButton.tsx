@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 
@@ -42,13 +43,13 @@ export function WatchButton({ crn }: { crn: string }) {
 
   if (state === "guest") {
     return (
-      <a
+      <Link
         href="/sign-up"
         className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-700"
       >
         <Star className="h-4 w-4" aria-hidden="true" />
         Save to watchlist
-      </a>
+      </Link>
     );
   }
 

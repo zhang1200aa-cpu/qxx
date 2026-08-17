@@ -7,6 +7,9 @@
  */
 import { getCache, CACHE_TTL } from "./cache";
 import { rateLimitAllow, CH_LIMIT } from "./rate-limit";
+import { cleanCrn, isValidCrn } from "./crn";
+import { getCompanyFromStore } from "./company-store";
+import { cache } from "react";
 import type {
   CompanyDetail,
   CompanyProfile,
@@ -41,19 +44,34 @@ function authHeader(): string {
   return "Basic " + Buffer.from(`${key}:`).toString("base64");
 }
 
-/** 校验 CRN：6-8 位数字（实际签发最小 6 位） */
+/**
+ * @deprecated 请改用 lib/crn 的 isValidCrn / cleanCrn（旧实现丢弃字母前缀且只认 6-8 位数字，
+ * 无法通过 SC/NI/OC/R0 等前缀型公司号）。为兼容外部引用保留薄封装。
+ */
 export function validCrn(value: string): boolean {
-  return /^\d{6,8}$/.test(value.trim());
+  return isValidCrn(value.trim());
 }
 
 async function chFetch<T>(
   path: string,
-  options?: { ttl?: number; key?: string }
+  options?: { ttl?: number; key?: string; cacheNotFound?: boolean }
 ): Promise<T> {
   const cache = getCache();
   const cacheKey = options?.key ?? `ch:${path}`;
+  const nfKey = `${cacheKey}:nf`;
 
-  // Step 1: 查缓存
+  // Step 0: 负缓存——该查询上次已被官方判定为不存在，直接短路，不消耗限流配额
+  if (options?.cacheNotFound !== false) {
+    const nf = await cache.get<boolean>(nfKey);
+    if (nf) {
+      throw new CompaniesHouseError(
+        "Company not found in the Companies House register.",
+        404
+      );
+    }
+  }
+
+  // Step 1: 查正缓存
   const cached = await cache.get<T>(cacheKey);
   if (cached !== null) return cached;
 
@@ -87,6 +105,11 @@ async function chFetch<T>(
     );
   }
   if (res.status === 404) {
+    // 负缓存：登记中不存在的公司号属于确定性结果，缓存 30 天，
+    // 避免 Googlebot / API 用户反复用同一个号穿透到上游（白白消耗 600 req/5min 配额）。
+    if (options?.cacheNotFound !== false) {
+      await cache.set(nfKey, true, options?.ttl ?? CACHE_TTL.company);
+    }
     throw new CompaniesHouseError(
       "Company not found in the Companies House register.",
       404
@@ -101,7 +124,7 @@ async function chFetch<T>(
 
   const data = (await res.json()) as T;
   // Step 4: 写入缓存（默认 TTL 30 天）
-await cache.set(cacheKey, data, options?.ttl ?? CACHE_TTL.company);
+  await cache.set(cacheKey, data, options?.ttl ?? CACHE_TTL.company);
   return data;
 }
 /** 公司类型 code -> 友好描述 */
@@ -223,17 +246,26 @@ function normalizeProfile(raw: Record<string, unknown>): CompanyProfile {
   };
 }
 
-/** 按 CRN 拉取公司详档（带缓存）；保留前导零，CRN 必须按注册表完整 8 位提交 */
-export async function getCompanyByCrn(crn: string): Promise<CompanyProfile> {
-  const clean = crn.replace(/\D/g, "");
-  if (!validCrn(clean)) {
+async function fetchCompanyByCrn(crn: string): Promise<CompanyProfile> {
+  const clean = cleanCrn(crn);
+  if (!clean) {
     throw new CompaniesHouseError("Invalid company number.", 400);
   }
+  // 1) 本地 ch-sync companies 库直读（毫秒级；零配额消耗、零上游穿透）
+  const local = await getCompanyFromStore(clean);
+  if (local) return local;
+  // 2) 未命中才回源官方 API（带 Redis 正/负缓存 + 全局 600 req/5min 限流保护）
   const raw = await chFetch<Record<string, unknown>>(`/company/${clean}`, {
     key: `ch:company:${clean}`,
   });
   return normalizeProfile(raw);
 }
+
+/**
+ * 按 CRN 拉取公司详档（本地库优先，CH 官方 API 兜底）。
+ * React cache() 使同一请求内 generateMetadata 与页面体共享一次数据加载。
+ */
+export const getCompanyByCrn = cache(fetchCompanyByCrn);
 
 /** 按名称/关键词搜索公司（带缓存） */
 export async function searchCompanies(

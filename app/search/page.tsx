@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Search as SearchIcon } from "lucide-react";
 import { searchCompanies } from "@/lib/companies-house";
+import { searchCompaniesFull } from "@/lib/meilisearch";
 import { formatDate } from "@/lib/format";
 import { SearchBox } from "@/components/features/SearchBox";
 import { BreadcrumbJsonLd } from "@/components/ui/JsonLd";
@@ -30,11 +31,39 @@ export default async function CompanySearchPage({ searchParams }: SearchPageProp
 
   let results;
   let error: string | null = null;
+  let searchSource: "local" | "companies-house" = "companies-house";
   if (query) {
+    // 1) 优先 Meilisearch 本地全量索引（毫秒级、零配额消耗）
     try {
-      results = await searchCompanies(query);
+      const meili = await searchCompaniesFull(query, { limit: 20 });
+      if (meili.configured) {
+        results = {
+          total_results: meili.total,
+          query,
+          items: meili.hits.map((h) => ({
+            company_number: h.company_number,
+            title: h.company_name ?? h.company_number,
+            description: h.sic_codes?.length
+              ? `Nature of business (SIC): ${h.sic_codes.join(", ")}`
+              : h.registered_office_address ?? undefined,
+            company_status: h.company_status ?? "unknown",
+            company_type: h.company_category ?? undefined,
+            date_of_creation: h.incorporation_date ?? undefined,
+            address_snippet: h.registered_office_address ?? undefined,
+          })),
+        };
+        searchSource = "local";
+      }
     } catch (err) {
-      error = err instanceof Error ? err.message : "Search failed.";
+      console.error("[search] Meilisearch 查询失败，回退官方搜索", err);
+    }
+    // 2) 未启用或异常 → 官方 Companies House 搜索（现状兜底）
+    if (!results) {
+      try {
+        results = await searchCompanies(query);
+      } catch (err) {
+        error = err instanceof Error ? err.message : "Search failed.";
+      }
     }
   }
 
@@ -83,10 +112,15 @@ export default async function CompanySearchPage({ searchParams }: SearchPageProp
 
         {results && !error && (
           <div className="mt-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
                 {results.total_results} {dict.misc.registeredCompany} — &quot;{query}&quot;
               </h2>
+              {searchSource === "local" && (
+                <span className="shrink-0 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-200">
+                  Meilisearch
+                </span>
+              )}
             </div>
             <ul className="mt-4 space-y-3">
               {results.items.map((item) => (

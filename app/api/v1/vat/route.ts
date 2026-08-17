@@ -12,9 +12,12 @@ import { ok, fail, corsPreflight } from "@/lib/api";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
-  if (req.method === "OPTIONS") return corsPreflight();
+/** CORS 预检：App Router 需要单独导出 OPTIONS 处理器才能响应 Preflight */
+export async function OPTIONS() {
+  return corsPreflight();
+}
 
+export async function GET(req: NextRequest) {
   const vat = req.nextUrl.searchParams.get("vat") ?? "";
 
   const auth = await authorizeRequest(req);

@@ -12,10 +12,17 @@ import { InfoCard, Field } from "@/components/ui/InfoCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WatchButton } from "@/components/features/WatchButton";
 import { CopyButton, PrintReportButton } from "@/components/ui/ActionButtons";
-import { JsonLd, BreadcrumbJsonLd } from "@/components/ui/JsonLd";
+import { JsonLd, BreadcrumbJsonLd, CompanyJsonLd } from "@/components/ui/JsonLd";
+import {
+  companyMetaTitle,
+  companyMetaDescription,
+  companyMetaKeywords,
+  companyRobots,
+} from "@/lib/seo";
 import { AdSlot } from "@/components/ui/AdSlot";
 import { FaqSection, getFaqData } from "@/components/features/FaqSection";
 import { AffiliateSection } from "@/components/features/AffiliateSection";
+import { listCompaniesBySic } from "@/lib/company-store";
 import { PdfWatermark } from "@/components/ui/PdfWatermark";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
@@ -35,31 +42,73 @@ function statusText(status: string): string {
   return map[status] ?? `Status: ${status}`;
 }
 
+/** 侧边栏：同行业公司内链（基于本地 companies 库；未配置或无线索时渲染 null） */
+async function SimilarCompanies({
+  crn,
+  sicCodes,
+}: {
+  crn: string;
+  sicCodes?: string[];
+}) {
+  const similar = await listCompaniesBySic(sicCodes ?? [], crn, 5);
+  if (!similar.length) return null;
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-600">
+        Similar Companies
+      </h2>
+      <ul className="mt-3 space-y-1">
+        {similar.map((s) => (
+          <li key={s.company_number}>
+            <Link
+              href={`/company/${s.company_number}`}
+              className="group flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
+            >
+              <span className="truncate">{s.company_name}</span>
+              <span className="shrink-0 font-mono text-[10px] text-slate-400 group-hover:text-blue-500">
+                {s.company_number}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { crn } = await params;
   try {
     const company = await getCompanyByCrn(crn);
-    const title = `${company.company_name} (CRN: ${company.company_number}) — Status & VAT Check`;
+    const title = companyMetaTitle(company);
+    const description = companyMetaDescription(company);
     return {
       title,
-      description: `${company.company_name} — ${statusText(company.company_status)}. Registered ${formatDate(
-        company.date_of_creation
-      )}. ${
-        company.sic_codes?.length
-          ? `Company type: ${typeLabel(company.company_type)}. `
-          : ""
-      }Search Companies House records, filing deadlines and VAT status.`,
+      description,
+      keywords: companyMetaKeywords(company),
+      // Dissolved / Removed / Converted 状态自动 noindex, follow（见 lib/seo.ts）
+      robots: companyRobots(company),
       alternates: { canonical: `/company/${crn}` },
       openGraph: {
         title,
-        description: `Official Companies House record for ${company.company_name} (CRN ${company.company_number}).`,
-        url: `/company/${crn}`,
+        description,
+        url: `${siteConfig.url}/company/${crn}`,
+        siteName: siteConfig.name,
+        locale: "en_GB",
         type: "website",
+        images: [
+          {
+            url: `${siteConfig.url}/api/og/company/${crn}`,
+            width: 1200,
+            height: 630,
+            alt: company.company_name,
+            type: "image/svg+xml",
+          },
+        ],
       },
     };
   } catch (err) {
-    if (err instanceof CompaniesHouseError && err.status === 404) return {};
-    if (err instanceof CompaniesHouseError && err.status === 400) return {};
+    if (err instanceof CompaniesHouseError && (err.status === 404 || err.status === 400)) return {};
     return { title: `Company CRN ${crn} — Lookup failed` };
   }
 }
@@ -154,42 +203,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           { name: company.company_name, path: `/company/${company.company_number}` },
         ]}
       />
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: company.company_name,
-          url: `${siteConfig.url}/company/${company.company_number}`,
-          identifier: `Companies House ${company.company_number}`,
-          address: company.registered_office_address
-            ? {
-                "@type": "PostalAddress",
-                streetAddress: [
-                  company.registered_office_address.address_line_1,
-                  company.registered_office_address.address_line_2,
-                ]
-                  .filter(Boolean)
-                  .join(", ") || undefined,
-                addressLocality: company.registered_office_address.locality || undefined,
-                addressRegion: company.registered_office_address.region || undefined,
-                postalCode: company.registered_office_address.postal_code || undefined,
-                addressCountry: "GB",
-              }
-            : undefined,
-          additionalProperty: [
-            {
-              "@type": "PropertyValue",
-              name: "Registration Status",
-              value: statusText(company.company_status),
-            },
-            {
-              "@type": "PropertyValue",
-              name: "Incorporation Date",
-              value: company.date_of_creation || "",
-            },
-          ],
-        }}
-      />
+      <CompanyJsonLd company={company} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -372,6 +386,12 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                 </li>
               </ul>
             </div>
+
+            {/* 同行业公司内链（pSEO 权重流转；本地库未配置时自动隐藏） */}
+            <SimilarCompanies
+              crn={company.company_number}
+              sicCodes={company.sic_codes}
+            />
           </aside>
         </div>
 

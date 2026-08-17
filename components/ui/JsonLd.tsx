@@ -1,4 +1,6 @@
 import { siteConfig } from "@/lib/site";
+import { companyJsonLd } from "@/lib/seo";
+import type { CompanyProfile } from "@/lib/types";
 
 /** 把 JSON-LD 注入 <head>（服务端渲染，SEO 富摘要用） */
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -52,4 +54,11 @@ export function BreadcrumbJsonLd({ items }: { items: { name: string; path: strin
       }}
     />
   );
+}
+
+/** 公司详情页 Schema.org Corporation / LocalBusiness 实体（legalName / registrationNumber / address / foundingDate） */
+export function CompanyJsonLd({ company }: { company: CompanyProfile }) {
+  const data = companyJsonLd(company);
+  if (!data) return null;
+  return <JsonLd data={data} />;
 }

@@ -12,6 +12,7 @@
  */
 import { NextResponse } from "next/server";
 import { getCache } from "@/lib/cache";
+import { cleanCrn } from "@/lib/crn";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,8 +36,8 @@ export async function POST(req: Request) {
   const email = (body.email ?? "").trim().toLowerCase();
   const crns = (body.crns ?? [])
     .map((c) => String(c))
-    .map((c) => c.replace(/\D/g, ""))
-    .filter((c) => /^\d{6,8}$/.test(c));
+    .map((c) => cleanCrn(c))
+    .filter((c): c is string => c !== null);
   const leadDays = Math.min(Math.max(Number(body.leadDays) || 30, 3), 60);
 
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {

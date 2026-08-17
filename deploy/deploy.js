@@ -37,11 +37,12 @@ const ROOT = path.resolve(__dirname, "..");
 const conn = new Client();
 
 // ---------- 需要上传的目录 / 文件 ----------
-const DIRS = ["app", "components", "lib", "public", "types", "docs"];
+const DIRS = ["app", "components", "lib", "public", "types", "docs", "scripts"];
 const FILES = [
   "package.json",
   "package-lock.json",
   "next.config.ts",
+  "middleware.ts",
   "tsconfig.json",
   "postcss.config.mjs",
   "eslint.config.mjs",
@@ -150,10 +151,23 @@ async function run() {
     const install = await runCommand(`cd ${REMOTE} && npm install --no-audit --no-fund 2>&1 | tail -3`);
     console.log(`[install] exit=${install.code}\n${install.out}`);
 
-    // 3) 生产构建（读取 .env.local 中的 NEXT_PUBLIC_SITE_URL）
+    // 3) 构建前类型检查（失败即中止，不触碰线上）
+    const typecheck = await runCommand(
+      `cd ${REMOTE} && node node_modules/typescript/bin/tsc --noEmit 2>&1 | tail -20`
+    );
+    console.log(`[typecheck] exit=${typecheck.code}`);
+    if (typecheck.code !== 0) throw new Error("typecheck failed on VPS");
+
+    // 4) 生产构建（读取 .env.local 中的 NEXT_PUBLIC_SITE_URL）
+    //    回滚保护：构建前备份当前 .next 为 .next.prev，失败即恢复，线上不受影响
+    await runCommand(`cd ${REMOTE} && rm -rf .next.prev && cp -r .next .next.prev`);
     const build = await runCommand(`cd ${REMOTE} && npm run build 2>&1 | tail -20`);
     console.log(`[build] exit=${build.code}\n${build.out}`);
-    if (build.code !== 0) throw new Error("build failed on VPS");
+    if (build.code !== 0) {
+      await runCommand(`cd ${REMOTE} && rm -rf .next && mv .next.prev .next`);
+      throw new Error("build failed on VPS（已回滚到上一版构建）");
+    }
+    await runCommand(`cd ${REMOTE} && rm -rf .next.prev`);
 
     // 4) 构建成功后，重启 systemd 服务（qxx.service 为 qxx.uk 真实守护进程，
     //    CGroup 整体重启并加载新构建，无 PM2/systemd 端口冲突问题）
@@ -171,11 +185,20 @@ async function run() {
     );
     console.log(`[pm2-clean] ${pm2Clean.out}`);
 
-    // 6) 验证
-    const check = await runCommand(
-      `sleep 5 && curl -s -o /dev/null -w 'local3000=%{http_code}\\n' http://127.0.0.1:3000/ && pm2 list`
-    );
-    console.log(`[check] ${check.out}`);
+    // 6) 健康检查重试（最多 5 次，每次间隔 2s）
+    let healthy = false;
+    for (let i = 1; i <= 5; i++) {
+      const probe = await runCommand(
+        `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/`
+      );
+      if (probe.out.trim() === "200") {
+        healthy = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    console.log(`[health] ${healthy ? "OK (HTTP 200)" : "FAILED after 5 retries"}`);
+    if (!healthy) throw new Error("health check failed after deploy");
   } catch (err) {
     console.error("DEPLOY ERROR:", err.message);
     process.exitCode = 1;

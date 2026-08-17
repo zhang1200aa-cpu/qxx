@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { BellRing, CheckCircle2 } from "lucide-react";
+import { cleanCrn } from "@/lib/crn";
 
 /** 申报临期邮件提醒订阅（Accountant Pro 亮点；免费可监控 3 家） */
 export function AlertOptIn() {
@@ -15,15 +16,17 @@ export function AlertOptIn() {
     e.preventDefault();
     const crnList = crns
       .split(/[\s,]+/)
-      .map((c) => c.replace(/\D/g, ""))
-      .filter((c) => /^\d{6,8}$/.test(c))
+      .map((c) => cleanCrn(c))
+      .filter((c): c is string => c !== null)
       .slice(0, 5000);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       setError("Enter a valid email address.");
       return;
     }
     if (crnList.length === 0) {
-      setError("Enter at least one company number (6-8 digits).");
+      setError(
+        "Enter at least one company number, e.g. 00445790 or SC123456."
+      );
       return;
     }
     setBusy(true);

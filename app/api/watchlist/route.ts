@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getCache } from "@/lib/cache";
+import { cleanCrn } from "@/lib/crn";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,11 +24,6 @@ async function list(userId: string): Promise<string[]> {
 async function save(userId: string, crns: string[]): Promise<void> {
   const cache = getCache();
   await cache.set(KEY(userId), crns, 60 * 60 * 24 * 30); // 30 天
-}
-
-function cleanCrn(v: string): string | null {
-  const digits = v.replace(/\D/g, "");
-  return /^\d{6,8}$/.test(digits) ? digits : null;
 }
 
 export async function GET() {
