@@ -148,12 +148,14 @@ async function run() {
     console.log("[upload] done");
 
     // 2) 安装依赖（复用已存在 node_modules，快速增量）
-    const install = await runCommand(`cd ${REMOTE} && npm install --no-audit --no-fund 2>&1 | tail -3`);
+    const install = await runCommand(
+      `cd ${REMOTE} && npm install --no-audit --no-fund > /tmp/qxx-install.log 2>&1; code=$?; tail -3 /tmp/qxx-install.log; exit $code`
+    );
     console.log(`[install] exit=${install.code}\n${install.out}`);
 
     // 3) 构建前类型检查（失败即中止，不触碰线上）
     const typecheck = await runCommand(
-      `cd ${REMOTE} && node node_modules/typescript/bin/tsc --noEmit 2>&1 | tail -20`
+      `cd ${REMOTE} && node node_modules/typescript/bin/tsc --noEmit > /tmp/qxx-tsc.log 2>&1; code=$?; tail -20 /tmp/qxx-tsc.log; exit $code`
     );
     console.log(`[typecheck] exit=${typecheck.code}`);
     if (typecheck.code !== 0) throw new Error("typecheck failed on VPS");
@@ -161,7 +163,9 @@ async function run() {
     // 4) 生产构建（读取 .env.local 中的 NEXT_PUBLIC_SITE_URL）
     //    回滚保护：构建前备份当前 .next 为 .next.prev，失败即恢复，线上不受影响
     await runCommand(`cd ${REMOTE} && rm -rf .next.prev && cp -r .next .next.prev`);
-    const build = await runCommand(`cd ${REMOTE} && npm run build 2>&1 | tail -20`);
+    const build = await runCommand(
+      `cd ${REMOTE} && npm run build > /tmp/qxx-build.log 2>&1; code=$?; tail -20 /tmp/qxx-build.log; exit $code`
+    );
     console.log(`[build] exit=${build.code}\n${build.out}`);
     if (build.code !== 0) {
       await runCommand(`cd ${REMOTE} && rm -rf .next && mv .next.prev .next`);
