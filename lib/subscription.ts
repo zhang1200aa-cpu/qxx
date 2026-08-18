@@ -182,6 +182,51 @@ export async function spendCredit(
   });
   return { ok: true, remaining: account.credits - 1 };
 }
+/* ---------------------------------------------------------------------------
+ * 管理员账户操作（Admin 后台调用）
+ * ------------------------------------------------------------------------- */
+
+/**
+ * 发放 / 重置 API Key：已有 Key 且非 reset 时幂等返回原 Key；
+ * reset 时旧 Key 映射立即失效并签发新 Key。
+ */
+export async function issueApiKey(
+  email: string,
+  { reset = false }: { reset?: boolean } = {}
+): Promise<string> {
+  const keyName = email.toLowerCase();
+  const existing = await getAccountByEmail(keyName);
+  if (existing?.apiKey && !reset) return existing.apiKey;
+
+  const newKey = generateApiKey();
+  if (existing?.apiKey) {
+    await cache().del(`key:${existing.apiKey}`);
+  }
+  await upsertAccount(keyName, {
+    apiKey: newKey,
+    plan: existing?.plan ?? "api-starter",
+    status: (existing?.status ?? "active") as SubscriptionStatus,
+  });
+  return newKey;
+}
+
+/** 撤销 API Key（删除 key 映射与账户内记录） */
+export async function revokeApiKey(email: string): Promise<void> {
+  const keyName = email.toLowerCase();
+  const existing = await getAccountByEmail(keyName);
+  if (existing?.apiKey) {
+    await cache().del(`key:${existing.apiKey}`);
+  }
+  await upsertAccount(keyName, { apiKey: undefined as never });
+}
+
+/** 停用 / 恢复账户：cancelled / expired 拒绝权益，active 恢复 */
+export async function setAccountStatus(
+  email: string,
+  status: SubscriptionStatus
+): Promise<void> {
+  await upsertAccount(email.toLowerCase(), { status });
+}
 
 /** 账户指纹（webhook / 邮件密钥） */
 export function hashId(input: string): string {

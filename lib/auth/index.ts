@@ -20,6 +20,7 @@ import { getAccountByEmail, type SubscriptionAccount } from "@/lib/subscription"
 import { PLANS, type PlanId } from "@/lib/billing";
 import { getClerkSession, clerkUserRecord, clerkConfigured } from "./clerk";
 import { getDemoUser, demoMode } from "./demo";
+import { touchUser } from "../registry";
 
 export type UserTier = "guest" | "member" | "subscriber";
 
@@ -31,6 +32,7 @@ export interface AuthUser {
   tier: UserTier;
   planId: PlanId;
   isDemo: boolean;
+  isAdmin: boolean;
   subscription: SubscriptionAccount | null;
 }
 
@@ -42,8 +44,19 @@ export function guestUser(): AuthUser {
     tier: "guest",
     planId: "free",
     isDemo: false,
+    isAdmin: false,
     subscription: null,
   };
+}
+
+/** 是否为管理员：邮箱在 ADMIN_EMAILS 白名单（逗号分隔）里 */
+export function isAdminUser(user: Pick<AuthUser, "email" | "tier">): boolean {
+  if (!user || user.tier === "guest" || !user.email) return false;
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return adminEmails.includes(user.email.toLowerCase());
 }
 
 /** 根据邮箱计算权益层级（付费状态由 billing 系统决定） */
@@ -71,15 +84,25 @@ export async function getCurrentUser(): Promise<AuthUser> {
       const record = await clerkUserRecord(session.userId);
       const email = (record?.email ?? "").toLowerCase();
       const resolved = await resolveTier(email);
-      return {
+      const user: AuthUser = {
         id: session.userId,
         email,
         name: record?.name ?? null,
         tier: resolved.tier,
         planId: resolved.planId,
         isDemo: false,
+        isAdmin: false,
         subscription: resolved.subscription,
       };
+      user.isAdmin = isAdminUser(user);
+      await touchUser({
+        email,
+        name: user.name,
+        userId: session.userId,
+        tier: user.tier,
+        planId: user.planId,
+      });
+      return user;
     }
     return guestUser();
   }
@@ -89,15 +112,25 @@ export async function getCurrentUser(): Promise<AuthUser> {
     const demo = await getDemoUser();
     if (demo) {
       const resolved = await resolveTier(demo.email);
-      return {
+      const user: AuthUser = {
         id: `demo:${demo.email}`,
         email: demo.email,
         name: demo.name ?? null,
         tier: resolved.tier,
         planId: resolved.planId,
         isDemo: true,
+        isAdmin: false,
         subscription: resolved.subscription,
       };
+      user.isAdmin = isAdminUser(user);
+      await touchUser({
+        email: demo.email,
+        name: user.name,
+        userId: user.id,
+        tier: user.tier,
+        planId: user.planId,
+      });
+      return user;
     }
   }
 
@@ -124,4 +157,13 @@ export class AuthRequiredError extends Error {
     super("Authentication required.");
     this.name = "AuthRequiredError";
   }
+}
+
+/** 要求管理员（未登录或非白名单 → 抛 AuthRequiredError） */
+export async function requireAdmin(): Promise<AuthUser> {
+  const user = await getCurrentUser();
+  if (user.tier === "guest" || !user.isAdmin) {
+    throw new AuthRequiredError();
+  }
+  return user;
 }
