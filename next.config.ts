@@ -92,6 +92,33 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // public/logo, /images 下的品牌图形（内容长期不变，文件名变更即新 URL）
+        source: "/logo/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=86400",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "public, max-age=86400, s-maxage=86400",
+          },
+        ],
+      },
+      {
         // public/ 下的图标/图片（内容长期不变，文件名变更即新 URL）
         source: "/favicon.ico",
         headers: [

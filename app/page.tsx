@@ -39,9 +39,20 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
-        <div className="mx-auto flex max-w-5xl flex-col items-center px-4 py-16 text-center sm:px-6 sm:py-20">
+      {/* Hero — 带品牌背景图 */}
+      <section className="relative overflow-hidden border-b border-slate-200">
+        {/* 背景图（SVG 程序生成，零请求开销） */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url(/images/hero-bg.svg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative">
+          <div className="mx-auto flex max-w-5xl flex-col items-center px-4 py-16 text-center sm:px-6 sm:py-20">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {dict.hero.badge}
@@ -63,9 +74,8 @@ export default async function HomePage() {
             <AdSlot slot="leaderboard-home" format="horizontal" className="h-[90px] w-full" />
           </div>
         </div>
+        </div>
       </section>
-
-      {/* 热门快捷入口（pSEO 内链） */}
       <QuickLinks />
 
       {/* Why Use qxx.uk */}
@@ -102,9 +112,18 @@ export default async function HomePage() {
         <FaqSection heading={faq.heading} items={faqItems} />
       </div>
 
-      {/* 变现 CTA：分层定价 */}
-      <section className="mx-auto mt-14 w-full max-w-4xl px-4 sm:px-6">
-        <div className="flex flex-col items-center gap-6 rounded-2xl bg-slate-900 px-6 py-10 text-center sm:px-12">
+      {/* 变现 CTA：分层定价 — 带品牌 SVG 背景 */}
+      <section className="relative mx-auto mt-14 w-full max-w-4xl overflow-hidden px-4 sm:px-6">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url(/images/cta-bg.svg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-col items-center gap-6 rounded-2xl px-6 py-10 text-center bg-slate-900/85 backdrop-blur-sm sm:px-12">
           <h2 className="text-2xl font-bold text-white">{dict.cta.title}</h2>
           <p className="max-w-xl text-sm leading-relaxed text-slate-300">{dict.cta.desc}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">

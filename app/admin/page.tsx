@@ -5,9 +5,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Users, CreditCard, Activity, Star } from "lucide-react";
+import { Users, CreditCard, Activity, Star, Search } from "lucide-react";
 import { requireAdmin, AuthRequiredError } from "@/lib/auth";
 import { adminStats } from "@/lib/registry";
+import { SeoAnalytics } from "@/components/features/SeoAnalytics";
 
 export const metadata: Metadata = {
   title: "Admin — qxx.uk",
@@ -39,10 +40,27 @@ export default async function AdminPage() {
         {cards.map((c) => (
           <div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <c.icon className="h-5 w-5 text-blue-700" aria-hidden="true" />
-            <p className="mt-3 text-3xl font-extrabold text-slate-900">{c.value.toLocaleString("en-GB")}</p>
-            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">{c.label}</p>
+            <p className="mt-3 text-3xl font-extrabold text-slate-900">
+              {c.value.toLocaleString("en-GB")}
+            </p>
+            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+              {c.label}
+            </p>
           </div>
         ))}
+      </div>
+
+      {/* SEO 性能面板 */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+            <Search className="h-4 w-4 text-blue-700" aria-hidden="true" />
+            SEO Performance
+          </h2>
+        </div>
+        <div className="mt-3">
+          <SeoAnalytics />
+        </div>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">

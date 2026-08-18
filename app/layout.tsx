@@ -47,11 +47,23 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     locale: "en_GB",
     type: "website",
+    images: [
+      {
+        url: "/api/og/default",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — UK Corporate & Tax Intelligence`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} — UK Corporate & Tax Intelligence`,
     description: siteConfig.description,
+    images: ["/api/og/default"],
+  },
+  icons: {
+    icon: "/logo/qxx-logo.svg",
   },
   robots: {
     index: true,

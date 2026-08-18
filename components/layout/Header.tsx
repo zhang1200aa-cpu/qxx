@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n-dict";
@@ -31,8 +30,15 @@ export async function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur print:hidden">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-2.5" aria-label={`${siteConfig.name} homepage`}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white shadow-sm transition-colors group-hover:bg-blue-800">
-            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          {/* 品牌 SVG 图标（替代 lucide ShieldCheck） */}
+          <span className="relative h-9 w-9 shrink-0">
+            <img
+              src="/logo/qxx-logo.svg"
+              alt={siteConfig.name}
+              className="h-9 w-9"
+              width={36}
+              height={36}
+            />
           </span>
           <span className="flex flex-col leading-none">
             <span className="text-lg font-bold tracking-tight text-slate-900">

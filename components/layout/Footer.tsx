@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n-dict";
@@ -54,8 +53,14 @@ export async function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              <span className="relative h-9 w-9 shrink-0">
+                <img
+                  src="/logo/qxx-logo.svg"
+                  alt={siteConfig.name}
+                  className="h-9 w-9"
+                  width={36}
+                  height={36}
+                />
               </span>
               <div className="leading-none">
                 <p className="text-lg font-bold text-white">{siteConfig.name}</p>
