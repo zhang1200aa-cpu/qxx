@@ -62,17 +62,20 @@ export function AccountBadge() {
   return (
     <div className="ml-2 flex items-center gap-2">
       <span
-        className={`hidden h-2 w-2 rounded-full sm:inline-block ${
+        className={`h-2 w-2 rounded-full ${
           state === "subscriber" ? "bg-emerald-500" : "bg-blue-500"
         }`}
         aria-hidden="true"
       />
       <Link
         href="/account"
-        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+        title={zh ? "我的账户 / 套餐" : de ? "Mein Konto / Plan" : "My account & plan"}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-800 sm:px-3"
       >
         <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
-        {zh ? "我的账户" : de ? "Mein Konto" : "My account"}
+        <span className="hidden sm:inline">
+          {zh ? "我的账户" : de ? "Mein Konto" : "My account"}
+        </span>
       </Link>
     </div>
   );

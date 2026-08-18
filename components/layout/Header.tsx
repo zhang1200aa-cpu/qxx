@@ -58,9 +58,8 @@ export async function Header() {
 
         <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher />
-          <div className="hidden md:block">
-            <AccountBadge />
-          </div>
+          {/* 移动端也显示账户徽章（登录态/套餐入口）——修复手机端看不到"我的账户" */}
+          <AccountBadge />
           <HeaderMobileMenu items={navItems} />
         </div>
       </div>
