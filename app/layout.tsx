@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WebsiteJsonLd } from "@/components/ui/JsonLd";
 import { ClerkProvider } from "@clerk/nextjs";
+import { zhCN, deDE, enUS } from "@clerk/localizations";
 import { clerkConfigured } from "@/lib/auth/clerk";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
@@ -118,9 +119,14 @@ export default async function RootLayout({
   const fontClass = `${geistSans.variable} ${geistMono.variable}`;
 
   if (clerkEnabled) {
+    const clerkLocale = lang === "zh" ? zhCN : lang === "de" ? deDE : enUS;
     return (
       <html lang={htmlLang} className={fontClass}>
-        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+        {/* locale 经 spread 透传：运行时让 Clerk 表单跟随界面语言（zh/de/en） */}
+        <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+          {...({ locale: clerkLocale } as object)}
+        >
           {body}
         </ClerkProvider>
       </html>

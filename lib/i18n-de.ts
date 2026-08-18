@@ -17,6 +17,17 @@ export const DICT_DE: TranslationDict = {
     bulkTools: "Stapel-Tools",
     status: "Dienststatus",
   },
+  auth: {
+    signInTitle: "Anmelden und kostenlose Mitgliedervorteile freischalten",
+    signInSubtitle: "Kostenlos: 50 API-Aufrufe/Tag, Firmen-Merkliste, Nutzungs-Dashboard.",
+    priceStart: "Kostenpflichtige Pläne ab",
+    signUpTitle: "Kostenloses Konto erstellen",
+    signUpSubtitle:
+      "Keine Kreditkarte nötig. Schaltet 50 API-Aufrufe/Tag, Merkliste und Nutzungs-Dashboard frei.",
+    alreadyMember: "Schon Mitglied?",
+    guestsAlwaysFree:
+      "Gäste können Firmen, VAT und Postleitzahlen jederzeit kostenlos abfragen – die Registrierung schaltet nur Mitgliedervorteile frei.",
+  },
   hero: {
     badge: "Live – offizielle britische öffentliche Daten",
     title: "Instant UK Company & VAT Verification",

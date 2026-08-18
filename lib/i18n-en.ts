@@ -17,6 +17,17 @@ export const DICT_EN: TranslationDict = {
     bulkTools: "Bulk Tools",
     status: "Service Status",
   },
+  auth: {
+    signInTitle: "Sign in to unlock free member features",
+    signInSubtitle: "Free: 50 API calls/day, company watchlist, usage dashboard.",
+    priceStart: "Paid plans start at",
+    signUpTitle: "Create your free account",
+    signUpSubtitle:
+      "No credit card. Unlocks 50 API calls/day, a company watchlist and your usage dashboard.",
+    alreadyMember: "Already a member?",
+    guestsAlwaysFree:
+      "Guests can always search companies, VAT and postcodes without an account. Sign-up is optional and only unlocks member perks.",
+  },
   hero: {
     badge: "Live official UK public data",
     title: "Instant UK Company & VAT Verification",

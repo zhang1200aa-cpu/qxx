@@ -120,6 +120,16 @@ export const DICT_ZH: TranslationDict = {
     bulkTools: "批量工具",
     status: "服务状态",
   },
+  auth: {
+    signInTitle: "登录以解锁免费会员功能",
+    signInSubtitle: "免费权益：每天 50 次 API、公司关注清单、用量仪表盘。",
+    priceStart: "付费方案低至",
+    signUpTitle: "创建您的免费账户",
+    signUpSubtitle: "无需信用卡，解锁每天 50 次 API、公司关注清单与用量仪表盘。",
+    alreadyMember: "已经是会员？",
+    guestsAlwaysFree:
+      "游客始终可免费查询公司、VAT 与邮编，无需注册；注册只解锁更多会员权益。",
+  },
   hero: {
     badge: "英国官方公开数据 · 实时同步",
     title: "英国公司与 VAT 即时核验",

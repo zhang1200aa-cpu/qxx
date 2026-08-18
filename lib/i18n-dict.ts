@@ -17,6 +17,15 @@ export interface TranslationDict {
     bulkTools: string;
     status: string;
   };
+  auth: {
+    signInTitle: string;
+    signInSubtitle: string;
+    priceStart: string;
+    signUpTitle: string;
+    signUpSubtitle: string;
+    alreadyMember: string;
+    guestsAlwaysFree: string;
+  };
   hero: {
     badge: string;
     title: string;

@@ -15,6 +15,7 @@
     "ms:sync": "node scripts/search/sync.mjs"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.15.4",
     "@clerk/nextjs": "^7.7.6",
     "ioredis": "^5.4.1",
     "lucide-react": "^0.453.0",
