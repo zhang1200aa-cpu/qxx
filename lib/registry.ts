@@ -11,6 +11,7 @@
  */
 import { getCache } from "./cache";
 import { getAccountByEmail } from "./subscription";
+import { getSearchStats } from "./search-stats";
 
 const MEMBER_INDEX_KEY = "idx:members";
 const MEMBER_TTL = 90 * 24 * 3600; // 90 天
@@ -150,6 +151,7 @@ export async function adminStats(): Promise<{
   subscribers: number;
   apiCallsMonth: number;
   watchlists: number;
+  search: Awaited<ReturnType<typeof getSearchStats>>;
 }> {
   const cache = getCache();
   const idx = (await cache.get<MemberIndex>(MEMBER_INDEX_KEY)) ?? { emails: [], updatedAt: "" };
@@ -165,5 +167,6 @@ export async function adminStats(): Promise<{
       watchlists += ((await cache.get<string[]>(`watchlist:${rec.userId}`)) ?? []).length;
     }
   }
-  return { members: idx.emails.length, subscribers, apiCallsMonth, watchlists };
+  const search = await getSearchStats();
+  return { members: idx.emails.length, subscribers, apiCallsMonth, watchlists, search };
 }

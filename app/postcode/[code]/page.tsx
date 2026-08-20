@@ -18,6 +18,7 @@ import { PdfWatermark } from "@/components/ui/PdfWatermark";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n-dict";
+import { recordFrontendSearch } from "@/lib/search-stats";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -70,6 +71,9 @@ export default async function PostcodeDetailPage({ params }: PageProps) {
     }
     throw err;
   }
+
+  // 统计前台邮编查询（游客 / 注册会员分别计数；自动过滤爬虫）
+  await recordFrontendSearch("postcode");
 
   const r = data.result!;
   const display = normalizePostcode(code);

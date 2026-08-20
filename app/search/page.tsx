@@ -9,6 +9,7 @@ import { BreadcrumbJsonLd } from "@/components/ui/JsonLd";
 import { AdSlot } from "@/components/ui/AdSlot";
 import { getLang } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n-dict";
+import { recordFrontendSearch } from "@/lib/search-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,11 @@ export default async function CompanySearchPage({ searchParams }: SearchPageProp
       } catch (err) {
         error = err instanceof Error ? err.message : "Search failed.";
       }
+    }
+
+    // 搜索有真实结果才算一次有效前台搜索（游客 / 注册会员分别计数）
+    if (results) {
+      await recordFrontendSearch("company");
     }
   }
 

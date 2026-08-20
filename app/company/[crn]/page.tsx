@@ -27,6 +27,7 @@ import { PdfWatermark } from "@/components/ui/PdfWatermark";
 import { siteConfig } from "@/lib/site";
 import { getLang } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n-dict";
+import { recordFrontendSearch } from "@/lib/search-stats";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -161,6 +162,9 @@ export default async function CompanyDetailPage({ params }: PageProps) {
     }
     throw err;
   }
+
+  // 统计前台公司搜索（游客 / 注册会员分别计数；自动过滤爬虫）
+  await recordFrontendSearch("company");
 
   const address = formatAddress(company.registered_office_address);
   const summary = [
