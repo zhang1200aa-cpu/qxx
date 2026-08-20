@@ -4,8 +4,9 @@ import Link from "next/link";
 import { KeyRound, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getCache } from "@/lib/cache";
-import { MEMBER_DAILY_API, SUBSCRIBER_DAILY_WEB_API } from "@/lib/api-auth";
-import { PLANS } from "@/lib/billing";
+import { MEMBER_DAILY_API, SUBSCRIBER_DAILY_WEB_API, getWebDailyApiForUser } from "@/lib/api-auth";
+import { PLANS, type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 import { demoMode } from "@/lib/auth/demo";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { getLang, t } from "@/lib/i18n";
@@ -24,8 +25,6 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   const cache = getCache();
   const day = new Date().toISOString().slice(0, 10);
-
-  const planZhName = (id: string) => PLAN_ZH[id as keyof typeof PLAN_ZH]?.name ?? id;
 
   if (user.tier === "guest") {
     return (
@@ -70,9 +69,19 @@ export default async function AccountPage() {
     (await cache.get<number>(`usage:webapi:${user.id}:${day}`)) ?? 0;
   const dailyCap =
     user.tier === "subscriber" ? SUBSCRIBER_DAILY_WEB_API : MEMBER_DAILY_API;
+  const dynamicDailyCap = await getWebDailyApiForUser(user);
   const watchlist = (await cache.get<string[]>(`watchlist:${user.id}`)) ?? [];
   const sub = user.subscription;
-  const planName = PLANS[user.planId]?.name ?? user.planId;
+  const activePlan = await getPlan(user.planId as PlanId);
+  const planName = activePlan?.name ?? user.planId;
+
+  // 中文名：后台覆盖过套餐名则显示后台名，否则显示中文本地化名
+  const planZhName = (id: string) => {
+    const pid = id as PlanId;
+    const overridden = activePlan && activePlan.name !== PLANS[pid]?.name;
+    if (overridden) return activePlan!.name;
+    return PLAN_ZH[id as keyof typeof PLAN_ZH]?.name ?? id;
+  };
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
@@ -101,7 +110,7 @@ export default async function AccountPage() {
         <StatCard
           icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
           label={t(lang, "API quota today", "今日 API 额度")}
-          value={`${dailyUsed} / ${dailyCap}`}
+          value={`${dailyUsed} / ${dynamicDailyCap}`}
           sub={t(lang, "resets daily", "每日重置")}
         />
         <StatCard

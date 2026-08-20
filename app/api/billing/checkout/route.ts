@@ -11,7 +11,8 @@
  * 返回 JSON: { checkoutUrl, provider, plan }
  */
 import { NextResponse } from "next/server";
-import { PLANS, type PlanId } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
       checkoutUrl,
       provider: "lemon-squeezy",
       plan,
-      priceUsd: PLANS[plan].priceUsd,
+      priceUsd: (await getPlan(plan as PlanId)).priceUsd,
     });
   }
 
@@ -94,7 +95,7 @@ export async function GET(req: Request) {
             checkoutUrl,
             provider: "lemon-squeezy",
             plan,
-            priceUsd: PLANS[plan].priceUsd,
+            priceUsd: (await getPlan(plan as PlanId)).priceUsd,
           });
         }
       }

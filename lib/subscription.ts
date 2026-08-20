@@ -13,7 +13,8 @@
  */
 import { randomBytes, createHash } from "crypto";
 import { getCache } from "./cache";
-import { PLANS, type PlanId } from "./billing";
+import { type PlanId } from "./billing";
+import { getPlan } from "./plan-config";
 export type SubscriptionStatus = "active" | "trialing" | "cancelled" | "expired";
 
 export interface SubscriptionAccount {
@@ -117,7 +118,7 @@ export interface QuotaResult {
 export async function consumeApiQuota(
   account: SubscriptionAccount
 ): Promise<QuotaResult> {
-  const plan = PLANS[account.plan];
+  const plan = await getPlan(account.plan);
   const limit = plan.limits.apiCallsPerMonth;
   if (limit <= 0) {
     return { allowed: true, remaining: 0, limit: 0 };
@@ -141,7 +142,7 @@ export async function authorizeBulk(
   planId: PlanId,
   requestedRows: number
 ): Promise<QuotaResult> {
-  const plan = PLANS[planId];
+  const plan = await getPlan(planId);
   const limit = plan.limits.bulkRowLimitPerBatch;
   if (requestedRows > limit) {
     return {
@@ -151,12 +152,11 @@ export async function authorizeBulk(
       reason: `Bulk batch limit for the current plan is ${limit} rows. Upgrade to process more.`,
     };
   }
-  // 每日行数防滥用（以计划为粒度计数）
+  // 每日行数防滥用（以计划为粒度计数，上限从套餐配置读取）
   const identity = planId;
   const rowKey = `usage:bulk:${identity}:${new Date().toISOString().slice(0, 10)}`;
   const usedRows = await cache().incr!(rowKey, 60 * 60 * 26);
-  const dailyCap =
-    planId === "free" ? 50 : planId === "member" ? 200 : 100_000;
+  const dailyCap = plan.limits.bulkDailyCap;
   if (usedRows > dailyCap) {
     return {
       allowed: false,

@@ -1,11 +1,11 @@
-/**
+﻿/**
  * /admin — 管理后台仪表盘（仅 ADMIN_EMAILS）
  * 数据源：lib/registry 会员索引（内存/Redis 缓存层）
  */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Users, CreditCard, Activity, Star, Search } from "lucide-react";
+import { Users, CreditCard, Activity, Star, Search, Settings, Package, KeyRound } from "lucide-react";
 import { requireAdmin, AuthRequiredError } from "@/lib/auth";
 import { adminStats } from "@/lib/registry";
 import { SeoAnalytics } from "@/components/features/SeoAnalytics";
@@ -69,6 +69,27 @@ export default async function AdminPage() {
           className="inline-flex rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
         >
           Customers &amp; Subscriptions →
+        </Link>
+        <Link
+          href="/admin/plans"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-400 hover:text-blue-700"
+        >
+          <Package className="h-4 w-4" aria-hidden="true" />
+          套餐设置 →
+        </Link>
+        <Link
+          href="/admin/keys"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-400 hover:text-blue-700"
+        >
+          <KeyRound className="h-4 w-4" aria-hidden="true" />
+          Key 配置 →
+        </Link>
+        <Link
+          href="/admin/settings"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-400 hover:text-blue-700"
+        >
+          <Settings className="h-4 w-4" aria-hidden="true" />
+          Search Limit Settings →
         </Link>
       </div>
 

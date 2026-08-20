@@ -22,7 +22,8 @@ import {
   generateApiKey,
   type SubscriptionAccount,
 } from "@/lib/subscription";
-import { PLANS, type PlanId } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
       if (status === "active" || status === "on_trial") {
         // 已有 key 保持复用，否则生成
         const existing = await upsertAccount(email, { plan, provider: "lemon-squeezy" });
-        if (!existing.apiKey && PLANS[plan].limits.apiCallsPerMonth > 0) {
+        if (!existing.apiKey && (await getPlan(plan)).limits.apiCallsPerMonth > 0) {
           patch.apiKey = generateApiKey();
         }
       }

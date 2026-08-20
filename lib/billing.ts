@@ -39,6 +39,8 @@ export interface Plan {
     creditReports: number; // 可用无印 PDF 报告点数
     emailAlerts: boolean; // 申报临期邮件提醒
     highPriorityApi: boolean; // 是否享受独立速率预算
+    bulkDailyCap: number; // 每日批量行数上限（防滥用）
+    webDailyApiCalls: number; // 网页会话每日 API 次数（0 = 不限制/无）
   };
 }
 
@@ -65,6 +67,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 0,
       emailAlerts: false,
       highPriorityApi: false,
+      bulkDailyCap: 50,
+      webDailyApiCalls: 0,
     },
   },
   member: {
@@ -88,6 +92,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 0,
       emailAlerts: false,
       highPriorityApi: false,
+      bulkDailyCap: 200,
+      webDailyApiCalls: 50,
     },
   },
   "api-starter": {
@@ -112,6 +118,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 0,
       emailAlerts: false,
       highPriorityApi: true,
+      bulkDailyCap: 100_000,
+      webDailyApiCalls: 1_000,
     },
   },
   "accountant-pro": {
@@ -136,6 +144,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 0,
       emailAlerts: true,
       highPriorityApi: true,
+      bulkDailyCap: 100_000,
+      webDailyApiCalls: 1_000,
     },
   },
   "credit-pack": {
@@ -160,6 +170,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 10, // 每份 $3 = 1 credit（按包叠加）
       emailAlerts: false,
       highPriorityApi: false,
+      bulkDailyCap: 50,
+      webDailyApiCalls: 0,
     },
   },
   "lead-export": {
@@ -183,6 +195,8 @@ export const PLANS: Record<PlanId, Plan> = {
       creditReports: 0,
       emailAlerts: false,
       highPriorityApi: false,
+      bulkDailyCap: 100_000,
+      webDailyApiCalls: 1_000,
     },
   },
 };

@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin, AuthRequiredError } from "@/lib/auth";
 import { getMemberProfile } from "@/lib/registry";
-import { PLANS } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 import { CustomerActions } from "./CustomerActions";
 
 export const metadata: Metadata = {
@@ -30,7 +31,8 @@ export default async function CustomerDetailPage({ params }: Props) {
   if (!profile) notFound();
 
   const sub = profile.subscription;
-  const planName = PLANS[sub?.plan as keyof typeof PLANS]?.name ?? sub?.plan ?? "member";
+  const activePlan = sub ? await getPlan(sub.plan as PlanId) : null;
+  const planName = activePlan?.name ?? sub?.plan ?? "member";
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">

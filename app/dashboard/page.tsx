@@ -3,7 +3,7 @@ import Link from "next/link";
 import { KeyRound } from "lucide-react";
 import { BulkTool } from "@/components/features/BulkTool";
 import { AlertOptIn } from "@/components/features/AlertOptIn";
-import { PLANS } from "@/lib/billing";
+import { getPlans } from "@/lib/plan-config";
 
 export const metadata: Metadata = {
   title: "Dashboard — Bulk Tools, Alerts & API",
@@ -13,7 +13,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const plans = await getPlans();
+  const planCards = [
+    { plan: plans.free, note: "Web lookups + 5-row batches" },
+    { plan: plans["api-starter"], note: "REST API · API quota/mo" },
+    { plan: plans["accountant-pro"], note: "5,000-row batches + alerts" },
+  ] as const;
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -36,13 +42,7 @@ export default function DashboardPage() {
 
       {/* 计划配额概览 */}
       <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {(
-          [
-            { plan: PLANS.free, note: "Web lookups + 5-row batches" },
-            { plan: PLANS["api-starter"], note: "REST API · $9.99/mo" },
-            { plan: PLANS["accountant-pro"], note: "5,000-row batches + alerts" },
-          ] as const
-        ).map(({ plan, note }) => (
+        {planCards.map(({ plan, note }) => (
           <div key={plan.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
               {plan.name}

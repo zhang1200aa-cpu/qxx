@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
-import { PLANS, PLAN_ORDER, type PlanId } from "@/lib/billing";
+import { PLANS, PLAN_ORDER, type Plan, type PlanId } from "@/lib/billing";
+import { getPlans } from "@/lib/plan-config";
 import { PLAN_ZH, PRICING_ZH } from "@/lib/i18n-zh";
 import { getLang, t, type Lang } from "@/lib/i18n";
 
@@ -215,18 +216,35 @@ const PLAN_EN: Record<PlanId, { name: string; audience: string; features: string
   },
 };
 
-function planMeta(lang: Lang, id: PlanId) {
+function planMeta(lang: Lang, id: PlanId, plan: Plan) {
   const base = PLANS[id];
+  // 后台 /admin/plans 是否覆盖过名称 / 描述（覆盖则统一显示后台值，否则回退语言文案）
+  const customName = plan.name !== base.name;
+  const customAudience = plan.audience !== base.audience;
   if (lang === "zh") {
     const zh = PLAN_ZH[id];
-    return { ...base, name: zh.name, audience: zh.audience, features: zh.features, cta: zh.cta };
+    return {
+      ...plan,
+      name: customName ? plan.name : zh.name,
+      audience: customAudience ? plan.audience : zh.audience,
+      features: zh.features,
+      cta: zh.cta,
+    };
   }
-  // en / de 默认展示英文套餐文案（含英文 priceLabel）
-  return { ...base, ...PLAN_EN[id] };
+  // en / de 默认展示英文套餐文案（含英文 priceLabel）；价格/限额字段始终用动态 plan
+  const en = PLAN_EN[id];
+  return {
+    ...plan,
+    name: customName ? plan.name : en.name,
+    audience: customAudience ? plan.audience : en.audience,
+    features: en.features,
+    cta: en.cta,
+  };
 }
 
 export default async function PricingPage() {
   const lang = await getLang();
+  const plans = await getPlans();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -261,7 +279,7 @@ export default async function PricingPage() {
       {/* 套餐卡片 */}
       <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {PLAN_ORDER.filter((id) => id !== "free").map((id) => {
-          const plan = planMeta(lang, id);
+          const plan = planMeta(lang, id, plans[id]);
           const featured = id === HIGHLIGHT;
           return (
             <div

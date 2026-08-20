@@ -17,7 +17,8 @@
  *      生产环境必须配置 Clerk 或等效 IdP
  */
 import { getAccountByEmail, type SubscriptionAccount } from "@/lib/subscription";
-import { PLANS, type PlanId } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "../plan-config";
 import { getClerkSession, clerkUserRecord, clerkConfigured } from "./clerk";
 import { getDemoUser, demoMode } from "./demo";
 import { touchUser } from "../registry";
@@ -67,7 +68,8 @@ async function resolveTier(email: string): Promise<{
 }> {
   const sub = email ? await getAccountByEmail(email) : null;
   if (sub) {
-    const isPaid = PLANS[sub.plan]?.priceUsd && PLANS[sub.plan].priceUsd! > 0;
+    const plan = await getPlan(sub.plan);
+    const isPaid = plan.priceUsd && plan.priceUsd > 0;
     if (isPaid && sub.status === "active") {
       return { subscription: sub, tier: "subscriber", planId: sub.plan };
     }

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { requireAdmin, AuthRequiredError } from "@/lib/auth";
 import { listMembers } from "@/lib/registry";
-import { PLANS } from "@/lib/billing";
+import { getPlans } from "@/lib/plan-config";
 
 export const metadata: Metadata = {
   title: "Customers — Admin — qxx.uk",
@@ -29,6 +29,7 @@ export default async function CustomersPage({ searchParams }: Props) {
   const q = (sp.q ?? "").trim().slice(0, 60);
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
   const { items, total } = await listMembers({ q, page, pageSize: 20 });
+  const plans = await getPlans();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -80,7 +81,7 @@ export default async function CustomersPage({ searchParams }: Props) {
                   {p.rec.name ? <span className="ml-2 text-xs text-slate-400">{p.rec.name}</span> : null}
                 </td>
                 <td className="px-4 py-3 capitalize">{p.rec.tier}</td>
-                <td className="px-4 py-3">{PLANS[p.rec.planId as keyof typeof PLANS]?.name ?? p.rec.planId}</td>
+                <td className="px-4 py-3">{plans[p.rec.planId as keyof typeof plans]?.name ?? p.rec.planId}</td>
                 <td className="px-4 py-3 capitalize">{p.subscription?.status ?? "member"}</td>
                 <td className="px-4 py-3">{p.apiUsageMonth.toLocaleString("en-GB")}</td>
                 <td className="px-4 py-3">{p.watchlistCount}</td>

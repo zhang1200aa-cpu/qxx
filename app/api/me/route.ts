@@ -7,9 +7,11 @@ import { getCurrentUser } from "@/lib/auth";
 import {
   MEMBER_DAILY_API,
   SUBSCRIBER_DAILY_WEB_API,
+  getWebDailyApiForUser,
 } from "@/lib/api-auth";
 import { getCache } from "@/lib/cache";
-import { PLANS } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,18 +28,16 @@ export async function GET() {
   }
 
   const dailyCap =
-    user.tier === "subscriber"
-      ? SUBSCRIBER_DAILY_WEB_API
-      : user.tier === "member"
-        ? MEMBER_DAILY_API
-        : 0;
+    user.tier === "guest" ? 0 : await getWebDailyApiForUser(user);
 
   // 账户信息（订阅）
   const subscription = user.subscription
     ? {
         email: user.subscription.email,
         planId: user.subscription.plan,
-        planName: PLANS[user.subscription.plan]?.name ?? user.subscription.plan,
+        planName:
+          (await getPlan(user.subscription.plan as PlanId)).name ??
+          user.subscription.plan,
         credits: user.subscription.credits,
         status: user.subscription.status,
         apiKey: user.subscription.apiKey ? "••••••••" : null,

@@ -8,7 +8,8 @@
  *   subscriber 付费用户（网页会话，无 key）→ 每天 1,000 次
  */
 import { authenticateApiKey, consumeApiQuota, type SubscriptionAccount } from "./subscription";
-import { PLANS, type PlanId } from "./billing";
+import { type PlanId } from "./billing";
+import { getPlan } from "./plan-config";
 import { rateLimitAllow, API_IP_LIMIT } from "./rate-limit";
 import { clientIp } from "./api";
 import { getCache } from "./cache";
@@ -27,9 +28,26 @@ export type AuthOutcome =
   | { ok: true; auth: RequestAuth }
   | { ok: false; status: number; code: string; message: string };
 
-/** 注册/付费用户的每日网页 API 额度 */
+/** 注册/付费用户的每日网页 API 额度（默认值，可在套餐设置中覆盖） */
 export const MEMBER_DAILY_API = 50;
 export const SUBSCRIBER_DAILY_WEB_API = 1_000;
+
+/** 读取用户当前套餐的"网页会话每日 API 次数"（动态配置） */
+export async function getWebDailyApiForUser(input: {
+  tier: UserTier;
+  planId: PlanId;
+}): Promise<number> {
+  if (input.tier === "guest") return 0;
+  try {
+    const plan = await getPlan(input.planId);
+    if (plan.limits.webDailyApiCalls > 0) return plan.limits.webDailyApiCalls;
+    // 回退：订阅用户用 api-starter 基准，会员用 member 基准
+    const base = await getPlan(input.tier === "subscriber" ? "api-starter" : "member");
+    return base.limits.webDailyApiCalls;
+  } catch {
+    return input.tier === "subscriber" ? SUBSCRIBER_DAILY_WEB_API : MEMBER_DAILY_API;
+  }
+}
 
 /** 授权一次 API 请求 */
 export async function authorizeRequest(req: Request): Promise<AuthOutcome> {
@@ -59,7 +77,7 @@ export async function authorizeRequest(req: Request): Promise<AuthOutcome> {
   }
 
   // ---- 付费 API 套餐：月度配额（有 x-api-key）----
-  if (account && PLANS[account.plan].limits.apiCallsPerMonth > 0) {
+  if (account && (await getPlan(account.plan)).limits.apiCallsPerMonth > 0) {
     const quota = await consumeApiQuota(account);
     if (!quota.allowed) {
       return {
@@ -75,7 +93,7 @@ export async function authorizeRequest(req: Request): Promise<AuthOutcome> {
         account,
         planId: account.plan,
         tier: "subscriber",
-        highPriority: PLANS[account.plan].limits.highPriorityApi,
+        highPriority: (await getPlan(account.plan)).limits.highPriorityApi,
         remaining: quota.remaining,
         limit: quota.limit,
       },
@@ -84,7 +102,7 @@ export async function authorizeRequest(req: Request): Promise<AuthOutcome> {
 
   // ---- 已登录用户（member / subscriber 网页会话）----
   if (user.tier === "member" || user.tier === "subscriber") {
-    const dailyCap = user.tier === "subscriber" ? SUBSCRIBER_DAILY_WEB_API : MEMBER_DAILY_API;
+    const dailyCap = await getWebDailyApiForUser(user);
     const day = new Date().toISOString().slice(0, 10);
     const key = `usage:webapi:${user.id}:${day}`;
     const used = await cache.incr!(key, 60 * 60 * 26);

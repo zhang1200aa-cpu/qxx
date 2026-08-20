@@ -21,7 +21,8 @@ import {
   type SubscriptionAccount,
 } from "@/lib/subscription";
 import { getCache } from "@/lib/cache";
-import { PLANS, type PlanId } from "@/lib/billing";
+import { type PlanId } from "@/lib/billing";
+import { getPlan } from "@/lib/plan-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -123,7 +124,7 @@ export async function POST(req: Request) {
           provider: "stripe",
           status: "active",
         };
-        if (PLANS[plan].limits.apiCallsPerMonth > 0 && !existing?.apiKey) {
+        if ((await getPlan(plan)).limits.apiCallsPerMonth > 0 && !existing?.apiKey) {
           patch.apiKey = generateApiKey();
         }
         await upsertAccount(email.trim().toLowerCase(), patch);
