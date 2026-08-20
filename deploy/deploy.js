@@ -42,7 +42,7 @@ const FILES = [
   "package.json",
   "package-lock.json",
   "next.config.ts",
-  "middleware.ts",
+  "proxy.ts",
   "tsconfig.json",
   "postcss.config.mjs",
   "eslint.config.mjs",
