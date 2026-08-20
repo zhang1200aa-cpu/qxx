@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { KeyRound, ShieldCheck, Star, TrendingUp } from "lucide-react";
+import { Check, KeyRound, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getCache } from "@/lib/cache";
 import { MEMBER_DAILY_API, SUBSCRIBER_DAILY_WEB_API, getWebDailyApiForUser } from "@/lib/api-auth";
 import { PLANS, type PlanId } from "@/lib/billing";
 import { getPlan } from "@/lib/plan-config";
+import { PLAN_EN } from "@/lib/plan-copy";
 import { demoMode } from "@/lib/auth/demo";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { getLang, t } from "@/lib/i18n";
@@ -74,6 +75,17 @@ export default async function AccountPage() {
   const sub = user.subscription;
   const activePlan = await getPlan(user.planId as PlanId);
   const planName = activePlan?.name ?? user.planId;
+
+  const planId = user.planId as PlanId;
+  // 当前套餐权益清单（多语言；文案来自共享的套餐展示文案）
+  const activePlanFeatures =
+    activePlan && activePlan.features && activePlan.features.length > 0
+      ? (lang === "zh"
+          ? (PLAN_ZH[planId]?.features ?? activePlan.features)
+          : (PLAN_EN[planId]?.features ?? activePlan.features))
+      : lang === "zh"
+        ? (PLAN_ZH[planId]?.features ?? [])
+        : (PLAN_EN[planId]?.features ?? []);
 
   // 中文名：后台覆盖过套餐名则显示后台名，否则显示中文本地化名
   const planZhName = (id: string) => {
@@ -148,16 +160,23 @@ export default async function AccountPage() {
         </section>
       )}
 
-      {/* 会员权益 */}
+      {/* 当前套餐权益（按用户套餐动态展示） */}
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-bold text-slate-900">
-          {t(lang, "Member perks", "会员权益")}
+          {t(lang, "Your plan benefits", "当前套餐权益")}
         </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {user.tier === "subscriber"
+            ? t(lang, "Included with your current plan.", "以下权益已包含在你的当前方案中。")
+            : t(lang, "Included with your free membership.", "以下权益已包含在你的免费会员资格中。")}
+        </p>
         <ul className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 sm:grid-cols-2">
-          <li>{t(lang, "✓ 50 free API calls per day", "✓ 每天 50 次免费 API 调用")}</li>
-          <li>{t(lang, "✓ Company watchlist (up to 50)", "✓ 公司关注清单（最多 50 家）")}</li>
-          <li>{t(lang, "✓ Usage dashboard", "✓ 用量仪表盘")}</li>
-          <li>{t(lang, "✓ Bulk batches up to 50 rows", "✓ 批量查询（每次最多 50 行）")}</li>
+          {activePlanFeatures.map((f) => (
+            <li key={f} className="flex items-start gap-2">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+              <span>{f}</span>
+            </li>
+          ))}
         </ul>
       </section>
 

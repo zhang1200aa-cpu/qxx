@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
 import { PLANS, PLAN_ORDER, type Plan, type PlanId } from "@/lib/billing";
 import { getPlans } from "@/lib/plan-config";
+import { PLAN_EN } from "@/lib/plan-copy";
 import { PLAN_ZH, PRICING_ZH } from "@/lib/i18n-zh";
 import { getLang, t, type Lang } from "@/lib/i18n";
 
@@ -130,91 +131,6 @@ const FAQ_ITEMS: { q: [string, string]; a: [string, string] }[] = [
     ],
   },
 ];
-
-// 英文（默认）套餐文案：非 zh 语言统一使用，避免泄漏 billing.ts 中的中文字段
-const PLAN_EN: Record<PlanId, { name: string; audience: string; features: string[]; cta: string; priceLabel: string }> = {
-  free: {
-    name: "Free",
-    audience: "For individuals occasionally checking a company or a VAT number",
-    features: [
-      "Single web lookups · no sign-up",
-      "Company status / address / filing deadlines",
-      "VAT validity check (live HMRC)",
-      "Postcode / council / ULEZ details",
-      "PDF verification report (watermarked)",
-      "API trial endpoints (60 req/min per IP)",
-    ],
-    cta: "Start free",
-    priceLabel: "£0",
-  },
-  member: {
-    name: "Free Member",
-    audience: "Registered users — unlock a daily API quota, watchlists and a usage dashboard",
-    features: [
-      "50 free API calls per day",
-      "Save companies to your watchlist",
-      "Usage dashboard & watchlist management",
-      "Email-only sign up (passwordless)",
-    ],
-    cta: "Sign up free",
-    priceLabel: "£0",
-  },
-  "api-starter": {
-    name: "API Starter",
-    audience: "Online sellers / developers — validate VAT in real time at checkout",
-    features: [
-      "REST API: company / VAT / postcode endpoints",
-      "10,000 API calls per month",
-      "Millisecond responses · official data feeds",
-      "Dedicated rate budget (off the free queue)",
-      "JSON ready for any cart / CRM",
-      "Email support",
-    ],
-    cta: "Get API key",
-    priceLabel: "$9.99",
-  },
-  "accountant-pro": {
-    name: "Accountant Pro",
-    audience: "Accountants & formation agents maintaining hundreds of client companies",
-    features: [
-      "CSV batch lookups (up to 5,000 rows per run)",
-      "Monthly company status monitoring",
-      "Filing deadline (Accounts / CS) email alerts",
-      "Automatic reminders at 30/14/7/3 days",
-      "Pro web dashboard",
-      "Export CSV / structured JSON",
-    ],
-    cta: "Start Pro",
-    priceLabel: "$29",
-  },
-  "credit-pack": {
-    name: "Credit Pack",
-    audience: "Procurement / risk teams — supplier due diligence with official proof",
-    features: [
-      "Official PDF due-diligence reports (no watermark)",
-      "Timestamp + official data-source authentication",
-      "Covers status / incorporation / filing dates",
-      "Valid for 12 months after purchase",
-      "Archive-ready for internal risk systems",
-      "Pay per report — no subscription",
-    ],
-    cta: "Buy credits",
-    priceLabel: "$3 / report",
-  },
-  "lead-export": {
-    name: "Lead Export",
-    audience: "Export sales / BD teams building prospect lists from company data",
-    features: [
-      "5,000-row company data export",
-      "Fields: name / CRN / SIC / address / incorporation year",
-      "Active-company filter",
-      "CSV download · ready for outreach",
-      "Compliant: official public data only",
-    ],
-    cta: "Export contacts",
-    priceLabel: "$29 / 5,000 rows",
-  },
-};
 
 function planMeta(lang: Lang, id: PlanId, plan: Plan) {
   const base = PLANS[id];
