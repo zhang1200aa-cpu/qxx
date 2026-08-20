@@ -55,3 +55,6 @@ next-env.d.ts
 
 # 用户本机临时保存的网页快照（不进入仓库）
 /登录界面/
+
+# VPS 配置密钥本地备份（含真实 .env.local 与 env-config.json，严禁入库）
+/config-backup/
