@@ -7,8 +7,10 @@ import {
   Loader2,
   MapPin,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { FREE_BULK_ROWS } from "@/lib/billing";
+import { parseSampleParam, sampleText } from "@/lib/bulk-samples";
 
 type BulkType = "company" | "vat" | "postcode";
 type Row = { input: string; data?: unknown; error?: string };
@@ -56,6 +58,20 @@ export function BulkTool() {
     return () => {
       active = false;
     };
+  }, []);
+
+  // 从 URL 的 ?sample=company|vat|postcode 预填示例数据（来自 /bulk-guide 的“在批量工具中打开”）
+  useEffect(() => {
+    try {
+      const param = new URLSearchParams(window.location.search).get("sample");
+      const s = parseSampleParam(param);
+      if (s) {
+        setType(s);
+        setText(sampleText(s));
+      }
+    } catch {
+      // 非浏览器环境忽略
+    }
   }, []);
 
   const parsed = useMemo(
@@ -192,6 +208,26 @@ function exportCsv() {
               </button>
             );
           })}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setText(sampleText(type));
+              setRows([]);
+              setError(null);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+          >
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            Load sample data
+          </button>
+          <a
+            href="/bulk-guide"
+            className="inline-flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-600"
+          >
+            See the step-by-step guide →
+          </a>
         </div>
 <div>
           <label htmlFor="bulk-input" className="mb-1 block text-xs font-semibold text-slate-600">
