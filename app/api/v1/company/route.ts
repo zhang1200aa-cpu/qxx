@@ -17,8 +17,12 @@ import { ok, fail, corsPreflight } from "@/lib/api";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** CORS 预检：App Router 需要独立导出 OPTIONS 处理器才能响应 Preflight */
+export async function OPTIONS() {
+  return corsPreflight();
+}
+
 export async function GET(req: NextRequest) {
-  if (req.method === "OPTIONS") return corsPreflight();
 
   const { searchParams } = req.nextUrl;
   const crn = searchParams.get("crn") ?? "";

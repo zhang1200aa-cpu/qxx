@@ -7,15 +7,18 @@
 import { NextResponse } from "next/server";
 
 export function ok<T>(data: T, extra?: { cached?: boolean; [k: string]: unknown }) {
+  const { cached, ...rest } = extra ?? {};
   return NextResponse.json(
     {
       success: true,
       data,
-      ...(extra?.cached !== undefined ? { cached: extra.cached } : {}),
+      ...(cached !== undefined ? { cached } : {}),
+      // 业务/响应级字段放在顶层（plan / highPriority / remaining / kind / exceptionCount ...），
+      // 不再混入 meta，避免 meta 语义被污染
+      ...rest,
       meta: {
         source: "qxx.uk",
         timestamp: new Date().toISOString(),
-        ...extra,
       },
     },
     {

@@ -96,10 +96,7 @@ export async function authenticateApiKey(
   const apiKey = req.headers.get("x-api-key");
   if (!apiKey) return { account: null };
   const account = await getAccountByApiKey(apiKey);
-  if (!account) return { account: null, apiKey };
-  if (account.status === "cancelled" || account.status === "expired") {
-    return { account, apiKey };
-  }
+  // 取消/过期状态的判定交由调用方（lib/api-auth.ts）统一处理，这里只负责取账户
   return { account, apiKey };
 }
 

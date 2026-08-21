@@ -11,8 +11,8 @@ import type { NextRequest } from "next/server";
 import { getCompanyByCrn, CompaniesHouseError } from "@/lib/companies-house";
 import { checkVatNumber, HmrcError } from "@/lib/hmrc-vat";
 import { lookupPostcode, PostcodeError } from "@/lib/postcodes";
-import { authenticateApiKey, authorizeBulk } from "@/lib/subscription";
-import { getCurrentUser } from "@/lib/auth";
+import { authorizeBulk } from "@/lib/subscription";
+import { authorizeRequest } from "@/lib/api-auth";
 import { ok, fail, corsPreflight } from "@/lib/api";
 import type { PlanId } from "@/lib/billing";
 
@@ -22,8 +22,12 @@ export const maxDuration = 300;
 
 type BulkType = "company" | "vat" | "postcode";
 
+/** CORS 预检：App Router 需要独立导出 OPTIONS 处理器才能响应 Preflight */
+export async function OPTIONS() {
+  return corsPreflight();
+}
+
 export async function POST(req: NextRequest) {
-  if (req.method === "OPTIONS") return corsPreflight();
 
   let body: { type?: BulkType; items?: string[] };
   try {
@@ -45,12 +49,17 @@ export async function POST(req: NextRequest) {
     return fail(400, "bad_request", "items array is empty.");
   }
 
-  const { account } = await authenticateApiKey(req);
-  const user = await getCurrentUser();
+  // 统一鉴权：游客 IP 限流 / 会员每日网页额度 / 订阅 x-api-key 月度配额，
+  // 并在此拦截无效 key(401)、已取消/过期订阅(402) 与超限(429)。
+  const auth = await authorizeRequest(req);
+  if (!auth.ok) {
+    return fail(auth.status, auth.code, auth.message);
+  }
+
+  const authInfo = auth.auth;
 
   // 计划判定：x-api-key 账户 > 登录层级 > 游客
-  const planId: PlanId =
-    account?.plan ?? (user.tier === "member" ? "member" : "free");
+  const planId: PlanId = authInfo.planId;
 
   const quota = await authorizeBulk(planId, items.length);
   if (!quota.allowed) {
