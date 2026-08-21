@@ -15,6 +15,7 @@ export const DICT_EN: TranslationDict = {
     signUp: "Create Account",
     dashboard: "Bulk Tools & Alerts",
     bulkTools: "Bulk Tools",
+    bulkGuide: "Bulk CSV Guide",
     status: "Service Status",
   },
   auth: {

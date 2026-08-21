@@ -15,6 +15,7 @@ export interface TranslationDict {
     signUp: string;
     dashboard: string;
     bulkTools: string;
+    bulkGuide: string;
     status: string;
   };
   auth: {

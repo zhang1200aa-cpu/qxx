@@ -15,6 +15,7 @@ export const DICT_DE: TranslationDict = {
     signUp: "Konto erstellen",
     dashboard: "Stapel-Tools & Alerts",
     bulkTools: "Stapel-Tools",
+    bulkGuide: "Stapel-CSV-Leitfaden",
     status: "Dienststatus",
   },
   auth: {

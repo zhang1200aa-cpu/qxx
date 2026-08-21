@@ -16,6 +16,7 @@ export async function Footer() {
         { href: "/vat", label: dict.nav.vatValidator },
         { href: "/postcode", label: dict.nav.postcodeLookup },
         { href: "/dashboard", label: dict.nav.dashboard },
+        { href: "/bulk-guide", label: dict.nav.bulkGuide },
       ],
     },
     {

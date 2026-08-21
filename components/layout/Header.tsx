@@ -13,6 +13,7 @@ function buildNav(dict: ReturnType<typeof getDict>): { href: string; label: stri
     { href: "/vat", label: dict.nav.vatValidator },
     { href: "/postcode", label: dict.nav.postcodeLookup },
     { href: "/pricing", label: dict.nav.pricing },
+    { href: "/bulk-guide", label: dict.nav.bulkGuide },
     { href: "/api-docs", label: dict.nav.apiDocs },
   ];
 }

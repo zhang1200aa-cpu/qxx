@@ -118,6 +118,7 @@ export const DICT_ZH: TranslationDict = {
     signUp: "创建账户",
     dashboard: "批量工具与提醒",
     bulkTools: "批量工具",
+    bulkGuide: "批量查询指南",
     status: "服务状态",
   },
   auth: {
