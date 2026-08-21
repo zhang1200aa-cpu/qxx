@@ -30,9 +30,28 @@ const TYPE_LABEL: Record<BulkType, { label: string; hint: string }> = {
   },
 };
 
+/**
+ * 从 URL 的 ?sample=company|vat|postcode 解析初始样本。
+ * 用 useState 惰性初始化完成（而非在 effect 内同步 setState），
+ * 避免触发级联渲染，也满足 react-hooks/set-state-in-effect。
+ * 仅在浏览器可用；SSR / 缺参 / 非法参数时回退默认值。
+ */
+function initialSample(): { type: BulkType; text: string } {
+  try {
+    const s =
+      typeof window === "undefined"
+        ? null
+        : parseSampleParam(new URLSearchParams(window.location.search).get("sample"));
+    return s ? { type: s, text: sampleText(s) } : { type: "company", text: "" };
+  } catch {
+    return { type: "company", text: "" };
+  }
+}
+
 export function BulkTool() {
-  const [type, setType] = useState<BulkType>("company");
-  const [text, setText] = useState("");
+  const [initial] = useState(initialSample); // ?sample= 预填（惰性初始化，仅计算一次）
+  const [type, setType] = useState<BulkType>(initial.type);
+  const [text, setText] = useState(initial.text);
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,20 +77,6 @@ export function BulkTool() {
     return () => {
       active = false;
     };
-  }, []);
-
-  // 从 URL 的 ?sample=company|vat|postcode 预填示例数据（来自 /bulk-guide 的“在批量工具中打开”）
-  useEffect(() => {
-    try {
-      const param = new URLSearchParams(window.location.search).get("sample");
-      const s = parseSampleParam(param);
-      if (s) {
-        setType(s);
-        setText(sampleText(s));
-      }
-    } catch {
-      // 非浏览器环境忽略
-    }
   }, []);
 
   const parsed = useMemo(
